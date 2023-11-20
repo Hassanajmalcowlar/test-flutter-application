@@ -1,10 +1,10 @@
 name: Test flutter code
 
 on:
+  repository_dispatch:
+    types:
+      - build-and-test
   
-  push:
-    branches:
-      - "main"
 
 jobs:
   build:
@@ -34,6 +34,7 @@ jobs:
             else
               echo "Test Workflow Status: $status"
               echo "Test Workflow Conclusion: $conclusion (FAILED)"
+              exit 1
             fi
           break
           elif [ "$status" == "null" ]; then
