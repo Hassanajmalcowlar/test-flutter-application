@@ -1,9 +1,7 @@
-name: Build and Test Flutter Code
+name: Test flutter code
 
 on:
-  repository_dispatch:
-    types:
-      - build-and-test
+  
   push:
     branches:
       - "main"
@@ -16,16 +14,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      - name: Trigger Source Repository Workflow
+        uses: peter-evans/repository-dispatch@v1
         with:
-          flutter-version: 3.10.6
-
-      - name: Build Flutter Code
-        run: flutter build apk  # Adjust the build command as needed
-
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: app-release.apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          token: ${{ secrets.PAT }} # Replace with your PAT
+          repository: Hassanajmalcowlar/appiumFramworksPOC
+          event-type: build-and-test
+      - name: Poll Test Workflow Status
+        run: |
+          while true; do
+            status=$(curl -s -H "Accept: application/vnd.github.v3+json" \
+            -u ${{ secrets.GITHUB_TOKEN }} \
+            https://api.github.com/repos/Hassanajmalcowlar/appiumFramworksPOC/actions/workflows/test.yml/runs/latest | jq -r '.status')
+            echo "Test Workflow Status: $status"
+            if [ "$status" == "completed" ]; then
+              break
+            fi
+            sleep 30  # Adjust the polling interval as needed
+          done    
