@@ -23,12 +23,25 @@ jobs:
       - name: Poll Test Workflow Status
         run: |
           while true; do
-            status=$(curl -s -H "Accept: application/vnd.github.v3+json" \
-            -u ${{ secrets.GITHUB_TOKEN }} \
-            https://api.github.com/repos/Hassanajmalcowlar/appiumFramworksPOC/actions/workflows/test.yml/runs/latest | jq -r '.status')
-            echo "Test Workflow Status: $status"
+            response=$(curl -s -H "Accept: application/vnd.github.v3+json" -u ${{ secrets.GITHUB_TOKEN }} https://api.github.com/repos/Hassanajmalcowlar/appiumFramworksPOC/actions/workflows/test.yml/runs/latest)
+            status=$(echo "$response" | jq -r '.status')
+            conclusion=$(echo "$response" | jq -r '.conclusion')
+      
             if [ "$status" == "completed" ]; then
-              break
+              if [ "$conclusion" == "success" ]; then
+                echo "Test Workflow Status: $status"
+                echo "Test Workflow Conclusion: $conclusion"
+            else
+              echo "Test Workflow Status: $status"
+              echo "Test Workflow Conclusion: $conclusion (FAILED)"
             fi
+          break
+          elif [ "$status" == "null" ]; then
+            echo "Error: Status is null. Check your API request or repository/workflow name."
+            exit 1
+          else
+            echo "Test Workflow Status: $status"
+            echo "Test Workflow Conclusion: $conclusion"
             sleep 30  # Adjust the polling interval as needed
-          done    
+          fi
+          done 
